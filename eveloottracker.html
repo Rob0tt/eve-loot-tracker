@@ -1,0 +1,2156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>zKillboard Loot Tracker</title>
+    <style>
+        :root {
+            --primary: #c41e3a;
+            --primary-light: #ff3333;
+            --primary-dark: #8b1528;
+            --accent: #ff6b00;
+            --bg-dark: #0a0a0a;
+            --bg-panel: #1a1a1a;
+            --bg-secondary: #242424;
+            --text-light: #e8e8e8;
+            --text-muted: #888888;
+            --success: #00ff41;
+            --danger: #ff3333;
+            --grid: rgba(196, 30, 58, 0.08);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            background-image: 
+                linear-gradient(90deg, rgba(196, 30, 58, 0.05) 1px, transparent 1px),
+                linear-gradient(rgba(196, 30, 58, 0.05) 1px, transparent 1px);
+            background-size: 50px 50px;
+            color: var(--text-light);
+            font-family: 'Arial', 'Helvetica', sans-serif;
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        header {
+            margin-bottom: 40px;
+            animation: fadeInDown 0.8s ease-out;
+            border-bottom: 2px solid var(--primary);
+            padding-bottom: 20px;
+        }
+
+        h1 {
+            font-size: 2.8em;
+            color: var(--primary-light);
+            text-shadow: 0 0 30px rgba(196, 30, 58, 0.8), 0 0 60px rgba(196, 30, 58, 0.4);
+            margin-bottom: 8px;
+            font-weight: bold;
+            letter-spacing: 3px;
+            font-family: 'Impact', 'Arial Black', sans-serif;
+        }
+
+        .subtitle {
+            color: var(--text-muted);
+            font-size: 0.95em;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+        }
+
+        .main-grid {
+            display: grid;
+            grid-template-columns: 1fr 380px;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .panel {
+            background-color: var(--bg-panel);
+            border: 2px solid var(--primary);
+            border-radius: 0;
+            padding: 25px;
+            box-shadow: 0 0 30px rgba(196, 30, 58, 0.25), inset 0 0 20px rgba(196, 30, 58, 0.05);
+            animation: fadeInUp 0.8s ease-out;
+        }
+
+        .panel h2 {
+            color: var(--primary-light);
+            text-transform: uppercase;
+            font-size: 0.9em;
+            letter-spacing: 2px;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid var(--primary);
+            font-weight: bold;
+        }
+
+        .input-group {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        input[type="text"],
+        input[type="number"],
+        select {
+            flex: 1;
+            background-color: var(--bg-secondary);
+            border: 2px solid var(--primary);
+            color: var(--text-light);
+            padding: 12px 15px;
+            font-family: 'Arial', sans-serif;
+            font-size: 0.95em;
+            transition: all 0.3s ease;
+            outline: none;
+        }
+
+        input[type="text"]:focus,
+        input[type="number"]:focus,
+        select:focus {
+            box-shadow: 0 0 20px rgba(196, 30, 58, 0.6), inset 0 0 10px rgba(196, 30, 58, 0.15);
+            border-color: var(--primary-light);
+            background-color: rgba(196, 30, 58, 0.1);
+        }
+
+        input[type="text"]::placeholder,
+        input[type="number"]::placeholder {
+            color: var(--text-muted);
+        }
+
+        button {
+            padding: 12px 20px;
+            background: linear-gradient(135deg, var(--primary-dark), var(--primary));
+            color: white;
+            border: 2px solid var(--primary-light);
+            font-family: 'Arial', sans-serif;
+            font-weight: bold;
+            cursor: pointer;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-size: 0.85em;
+            transition: all 0.3s ease;
+            border-radius: 0;
+        }
+
+        button:hover {
+            background: linear-gradient(135deg, var(--primary), var(--primary-light));
+            box-shadow: 0 0 30px rgba(196, 30, 58, 0.8);
+            transform: translateY(-2px);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        .kill-item {
+            background-color: rgba(196, 30, 58, 0.08);
+            border-left: 4px solid var(--primary);
+            padding: 15px;
+            margin-bottom: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            animation: slideIn 0.4s ease-out;
+            border-radius: 0;
+            transition: all 0.3s ease;
+        }
+
+        .kill-item:hover {
+            background-color: rgba(196, 30, 58, 0.15);
+            box-shadow: 0 0 20px rgba(196, 30, 58, 0.4), inset 0 0 10px rgba(196, 30, 58, 0.1);
+            border-left-color: var(--primary-light);
+        }
+
+        .kill-info {
+            flex: 1;
+        }
+
+        .kill-name {
+            color: var(--primary-light);
+            font-weight: bold;
+            margin-bottom: 4px;
+            font-size: 0.95em;
+            text-transform: capitalize;
+        }
+
+        .kill-details {
+            font-size: 0.8em;
+            color: var(--text-muted);
+        }
+
+        .kill-isk {
+            color: var(--success);
+            font-weight: bold;
+            font-size: 1.1em;
+            text-align: right;
+            margin-right: 15px;
+            min-width: 120px;
+            text-shadow: 0 0 10px rgba(0, 255, 65, 0.3);
+        }
+
+        .kill-isk.high {
+            color: var(--primary-light);
+            text-shadow: 0 0 15px rgba(255, 51, 51, 0.6);
+        }
+
+        .remove-btn {
+            background: linear-gradient(135deg, #600000, #8b0000);
+            color: white;
+            padding: 8px 12px;
+            font-size: 0.75em;
+            border: 2px solid var(--danger);
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .remove-btn:hover {
+            background: linear-gradient(135deg, #8b0000, #ff3333);
+            box-shadow: 0 0 15px rgba(255, 51, 51, 0.8);
+        }
+
+        .tabs {
+            display: flex;
+            gap: 5px;
+            margin-bottom: 20px;
+            border-bottom: 2px solid var(--primary);
+            flex-wrap: wrap;
+        }
+
+        .tab-btn {
+            padding: 10px 16px;
+            background-color: transparent;
+            border: 2px solid transparent;
+            color: var(--text-muted);
+            cursor: pointer;
+            text-transform: uppercase;
+            font-size: 0.75em;
+            letter-spacing: 1px;
+            transition: all 0.3s ease;
+            font-family: 'Arial', sans-serif;
+            font-weight: bold;
+        }
+
+        .tab-btn.active {
+            color: var(--primary-light);
+            border-bottom: 2px solid var(--primary-light);
+            background-color: rgba(196, 30, 58, 0.1);
+        }
+
+        .tab-btn:hover {
+            color: var(--primary);
+            border-bottom: 2px solid var(--primary);
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+            animation: fadeInUp 0.4s ease-out;
+        }
+
+        .stats-panel {
+            position: sticky;
+            top: 20px;
+        }
+
+        .stat-block {
+            background-color: rgba(196, 30, 58, 0.1);
+            border: 2px solid var(--primary);
+            padding: 20px;
+            margin-bottom: 15px;
+            border-radius: 0;
+            text-align: center;
+        }
+
+        .stat-label {
+            color: var(--text-muted);
+            font-size: 0.75em;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 10px;
+        }
+
+        .stat-value {
+            color: var(--primary-light);
+            font-size: 1.8em;
+            font-weight: bold;
+            word-break: break-all;
+            text-shadow: 0 0 15px rgba(196, 30, 58, 0.6);
+            font-family: 'Courier New', monospace;
+        }
+
+        .stat-value.highlight {
+            color: var(--accent);
+            text-shadow: 0 0 15px rgba(255, 107, 0, 0.5);
+        }
+
+        .split-calculator {
+            background-color: rgba(196, 30, 58, 0.08);
+            border: 2px solid var(--primary);
+            padding: 15px;
+            border-radius: 0;
+            margin-bottom: 15px;
+        }
+
+        .split-input {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 10px;
+            font-size: 0.85em;
+        }
+
+        .split-input input {
+            width: 70px;
+            padding: 8px;
+            background-color: var(--bg-secondary);
+            border: 2px solid var(--primary);
+        }
+
+        .split-input input:focus {
+            box-shadow: 0 0 10px rgba(196, 30, 58, 0.6), inset 0 0 8px rgba(196, 30, 58, 0.15);
+        }
+
+        .split-result {
+            color: var(--primary-light);
+            font-weight: bold;
+            text-align: center;
+            padding: 10px;
+            background-color: rgba(196, 30, 58, 0.12);
+            border-radius: 0;
+            font-size: 0.9em;
+            border: 1px solid var(--primary);
+            font-family: 'Courier New', monospace;
+        }
+
+        .error {
+            background-color: rgba(196, 30, 58, 0.15);
+            border-left: 4px solid var(--danger);
+            color: var(--danger);
+            padding: 12px 15px;
+            margin-bottom: 15px;
+            border-radius: 0;
+            font-size: 0.9em;
+            animation: shake 0.4s ease-out;
+        }
+
+        .success-msg {
+            background-color: rgba(0, 255, 65, 0.1);
+            border-left: 4px solid var(--success);
+            color: var(--success);
+            padding: 12px 15px;
+            margin-bottom: 15px;
+            border-radius: 0;
+            font-size: 0.9em;
+            animation: slideIn 0.4s ease-out;
+        }
+
+        .loading {
+            color: var(--primary);
+            animation: pulse 1.5s infinite;
+        }
+
+        .empty-state {
+            color: var(--text-muted);
+            text-align: center;
+            padding: 40px 20px;
+            font-size: 0.9em;
+            opacity: 0.7;
+        }
+
+        .controls {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+
+        .secondary-btn {
+            background: linear-gradient(135deg, rgba(196, 30, 58, 0.3), rgba(196, 30, 58, 0.1));
+            color: var(--primary);
+            flex: 1;
+            min-width: 150px;
+            border-color: var(--primary);
+        }
+
+        .secondary-btn:hover {
+            background: linear-gradient(135deg, rgba(196, 30, 58, 0.5), rgba(196, 30, 58, 0.3));
+            color: var(--primary-light);
+        }
+
+        .loss-item {
+            background-color: rgba(255, 51, 51, 0.08);
+            border-left: 4px solid var(--danger);
+            padding: 15px;
+            margin-bottom: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-radius: 0;
+        }
+
+        .loss-value {
+            color: var(--danger);
+            font-weight: bold;
+            font-size: 1.1em;
+        }
+
+        .pilot-item {
+            background-color: rgba(196, 30, 58, 0.08);
+            border-left: 4px solid var(--primary);
+            padding: 12px;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-radius: 0;
+        }
+
+        .pilot-name {
+            color: var(--primary-light);
+            font-weight: bold;
+        }
+
+        .pilot-kills {
+            color: var(--text-muted);
+            font-size: 0.85em;
+            margin: 0 15px;
+        }
+
+        .pilot-share {
+            color: var(--success);
+            font-weight: bold;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .form-row.full {
+            grid-template-columns: 1fr;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .form-group label {
+            color: var(--text-muted);
+            font-size: 0.75em;
+            margin-bottom: 5px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .form-group input,
+        .form-group select {
+            background-color: var(--bg-secondary);
+            border: 2px solid var(--primary);
+            color: var(--text-light);
+            padding: 10px;
+            font-family: 'Arial', sans-serif;
+            font-size: 0.9em;
+            border-radius: 0;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus {
+            outline: none;
+            box-shadow: 0 0 10px rgba(196, 30, 58, 0.5);
+            border-color: var(--primary-light);
+        }
+
+        .stat-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+
+        .mini-stat {
+            background-color: rgba(196, 30, 58, 0.08);
+            border: 2px solid var(--primary);
+            padding: 12px;
+            border-radius: 0;
+            text-align: center;
+        }
+
+        .mini-stat-label {
+            color: var(--text-muted);
+            font-size: 0.7em;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 5px;
+        }
+
+        .mini-stat-value {
+            color: var(--primary-light);
+            font-weight: bold;
+            font-size: 1.2em;
+        }
+
+        .session-item {
+            background-color: rgba(196, 30, 58, 0.08);
+            border: 2px solid var(--primary);
+            padding: 15px;
+            margin-bottom: 12px;
+            border-radius: 0;
+        }
+
+        .session-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .session-name {
+            color: var(--primary-light);
+            font-weight: bold;
+        }
+
+        .session-date {
+            color: var(--text-muted);
+            font-size: 0.85em;
+        }
+
+        .session-stats {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 10px;
+            font-size: 0.85em;
+            margin-top: 10px;
+        }
+
+        .session-stat {
+            text-align: center;
+            padding: 8px;
+            background-color: rgba(196, 30, 58, 0.1);
+            border-radius: 0;
+            border: 1px solid var(--primary);
+        }
+
+        .session-label {
+            color: var(--text-muted);
+            font-size: 0.75em;
+        }
+
+        .session-value {
+            color: var(--success);
+            font-weight: bold;
+        }
+
+        .loot-item {
+            background-color: rgba(196, 30, 58, 0.05);
+            padding: 10px;
+            margin: 8px 0;
+            border-left: 3px solid var(--primary);
+            font-size: 0.85em;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-radius: 0;
+        }
+
+        .loot-name {
+            color: var(--primary);
+            flex: 1;
+        }
+
+        .loot-qty {
+            color: var(--text-muted);
+            margin: 0 10px;
+            min-width: 50px;
+            text-align: right;
+        }
+
+        .loot-value {
+            color: var(--success);
+            font-weight: bold;
+            min-width: 100px;
+            text-align: right;
+        }
+
+        .chart-bar {
+            background-color: rgba(196, 30, 58, 0.15);
+            height: 30px;
+            margin-bottom: 12px;
+            border-radius: 0;
+            display: flex;
+            align-items: center;
+            padding: 0 10px;
+            position: relative;
+            overflow: hidden;
+            border: 1px solid var(--primary);
+        }
+
+        .chart-bar-inner {
+            background: linear-gradient(90deg, var(--primary-dark), var(--primary-light));
+            height: 100%;
+            display: flex;
+            align-items: center;
+            padding: 0 10px;
+            color: white;
+            font-weight: bold;
+            font-size: 0.85em;
+            white-space: nowrap;
+        }
+
+        .chart-label {
+            position: absolute;
+            left: 10px;
+            color: var(--text-light);
+            font-weight: bold;
+            z-index: 2;
+            font-size: 0.85em;
+        }
+
+        @keyframes fadeInDown {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
+        }
+
+        @media (max-width: 768px) {
+            .main-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .stats-panel {
+                position: static;
+            }
+
+            h1 {
+                font-size: 2em;
+            }
+
+            .kill-item {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 10px;
+            }
+
+            .kill-isk {
+                margin-right: 0;
+                text-align: left;
+            }
+
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+
+            .session-stats {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            background-image: 
+                linear-gradient(90deg, rgba(0, 212, 255, 0.03) 1px, transparent 1px),
+                linear-gradient(rgba(0, 212, 255, 0.03) 1px, transparent 1px);
+            background-size: 50px 50px;
+            color: var(--text-light);
+            font-family: 'Courier New', monospace;
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        header {
+            margin-bottom: 40px;
+            animation: fadeInDown 0.8s ease-out;
+        }
+
+        h1 {
+            font-size: 2.5em;
+            color: var(--primary);
+            text-shadow: 0 0 20px rgba(0, 212, 255, 0.5);
+            margin-bottom: 8px;
+            font-weight: bold;
+            letter-spacing: 2px;
+        }
+
+        .subtitle {
+            color: var(--text-muted);
+            font-size: 0.9em;
+            letter-spacing: 1px;
+        }
+
+        .main-grid {
+            display: grid;
+            grid-template-columns: 1fr 350px;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .panel {
+            background-color: var(--bg-panel);
+            border: 1px solid var(--primary);
+            border-radius: 2px;
+            padding: 25px;
+            box-shadow: 0 0 20px rgba(0, 212, 255, 0.1), inset 0 0 20px rgba(0, 212, 255, 0.02);
+            animation: fadeInUp 0.8s ease-out;
+        }
+
+        .panel h2 {
+            color: var(--primary);
+            text-transform: uppercase;
+            font-size: 0.85em;
+            letter-spacing: 2px;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid rgba(0, 212, 255, 0.3);
+        }
+
+        .input-group {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        input[type="text"] {
+            flex: 1;
+            background-color: rgba(10, 14, 39, 0.8);
+            border: 1px solid var(--primary);
+            color: var(--text-light);
+            padding: 12px 15px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            transition: all 0.3s ease;
+            outline: none;
+        }
+
+        input[type="text"]:focus {
+            box-shadow: 0 0 15px rgba(0, 212, 255, 0.4), inset 0 0 10px rgba(0, 212, 255, 0.1);
+            border-color: var(--primary);
+        }
+
+        input[type="text"]::placeholder {
+            color: var(--text-muted);
+        }
+
+        button {
+            padding: 12px 20px;
+            background-color: var(--primary);
+            color: var(--bg-dark);
+            border: none;
+            font-family: 'Courier New', monospace;
+            font-weight: bold;
+            cursor: pointer;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-size: 0.85em;
+            transition: all 0.3s ease;
+            border-radius: 2px;
+        }
+
+        button:hover {
+            background-color: var(--primary-dark);
+            box-shadow: 0 0 20px rgba(0, 212, 255, 0.6);
+            transform: translateY(-2px);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        .kill-item {
+            background-color: rgba(0, 212, 255, 0.05);
+            border-left: 3px solid var(--primary);
+            padding: 15px;
+            margin-bottom: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            animation: slideIn 0.4s ease-out;
+            border-radius: 2px;
+            transition: all 0.3s ease;
+        }
+
+        .kill-item:hover {
+            background-color: rgba(0, 212, 255, 0.08);
+            box-shadow: 0 0 15px rgba(0, 212, 255, 0.2);
+        }
+
+        .kill-info {
+            flex: 1;
+        }
+
+        .kill-name {
+            color: var(--primary);
+            font-weight: bold;
+            margin-bottom: 4px;
+            font-size: 0.95em;
+        }
+
+        .kill-details {
+            font-size: 0.8em;
+            color: var(--text-muted);
+        }
+
+        .kill-isk {
+            color: var(--success);
+            font-weight: bold;
+            font-size: 1.1em;
+            text-align: right;
+            margin-right: 15px;
+            min-width: 120px;
+        }
+
+        .kill-isk.high {
+            color: var(--accent);
+            text-shadow: 0 0 10px rgba(255, 107, 0, 0.4);
+        }
+
+        .remove-btn {
+            background-color: var(--danger);
+            color: white;
+            padding: 8px 12px;
+            font-size: 0.75em;
+            border: none;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .remove-btn:hover {
+            background-color: #ff5555;
+            box-shadow: 0 0 10px rgba(255, 51, 51, 0.6);
+        }
+
+        .stats-panel {
+            position: sticky;
+            top: 20px;
+        }
+
+        .stat-block {
+            background-color: rgba(0, 212, 255, 0.1);
+            border: 1px solid var(--primary);
+            padding: 20px;
+            margin-bottom: 15px;
+            border-radius: 2px;
+            text-align: center;
+        }
+
+        .stat-label {
+            color: var(--text-muted);
+            font-size: 0.75em;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 10px;
+        }
+
+        .stat-value {
+            color: var(--success);
+            font-size: 1.8em;
+            font-weight: bold;
+            word-break: break-all;
+            text-shadow: 0 0 15px rgba(0, 255, 65, 0.3);
+        }
+
+        .stat-value.highlight {
+            color: var(--accent);
+            text-shadow: 0 0 15px rgba(255, 107, 0, 0.5);
+        }
+
+        .split-calculator {
+            background-color: rgba(255, 107, 0, 0.1);
+            border: 1px solid var(--accent);
+            padding: 15px;
+            border-radius: 2px;
+            margin-bottom: 15px;
+        }
+
+        .split-input {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 10px;
+            font-size: 0.85em;
+        }
+
+        .split-input input {
+            width: 70px;
+            padding: 8px;
+            background-color: rgba(10, 14, 39, 0.9);
+            border: 1px solid var(--accent);
+        }
+
+        .split-input input:focus {
+            box-shadow: 0 0 10px rgba(255, 107, 0, 0.4), inset 0 0 8px rgba(255, 107, 0, 0.1);
+        }
+
+        .split-result {
+            color: var(--accent);
+            font-weight: bold;
+            text-align: center;
+            padding: 10px;
+            background-color: rgba(255, 107, 0, 0.05);
+            border-radius: 2px;
+            font-size: 0.9em;
+        }
+
+        .error {
+            background-color: rgba(255, 51, 51, 0.1);
+            border-left: 3px solid var(--danger);
+            color: var(--danger);
+            padding: 12px 15px;
+            margin-bottom: 15px;
+            border-radius: 2px;
+            font-size: 0.9em;
+            animation: shake 0.4s ease-out;
+        }
+
+        .success-msg {
+            background-color: rgba(0, 255, 65, 0.1);
+            border-left: 3px solid var(--success);
+            color: var(--success);
+            padding: 12px 15px;
+            margin-bottom: 15px;
+            border-radius: 2px;
+            font-size: 0.9em;
+            animation: slideIn 0.4s ease-out;
+        }
+
+        .loading {
+            color: var(--primary);
+            animation: pulse 1.5s infinite;
+        }
+
+        .empty-state {
+            color: var(--text-muted);
+            text-align: center;
+            padding: 40px 20px;
+            font-size: 0.9em;
+            opacity: 0.7;
+        }
+
+        .controls {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+
+        .secondary-btn {
+            background-color: rgba(0, 212, 255, 0.2);
+            color: var(--primary);
+            flex: 1;
+            min-width: 150px;
+        }
+
+        .secondary-btn:hover {
+            background-color: rgba(0, 212, 255, 0.3);
+        }
+
+        @keyframes fadeInDown {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
+        }
+
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            border-bottom: 1px solid rgba(0, 212, 255, 0.2);
+            flex-wrap: wrap;
+        }
+
+        .tab-btn {
+            padding: 10px 16px;
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            cursor: pointer;
+            text-transform: uppercase;
+            font-size: 0.8em;
+            letter-spacing: 1px;
+            transition: all 0.3s ease;
+            border-bottom: 2px solid transparent;
+            font-family: 'Courier New', monospace;
+            font-weight: bold;
+        }
+
+        .tab-btn.active {
+            color: var(--primary);
+            border-bottom-color: var(--primary);
+        }
+
+        .tab-btn:hover {
+            color: var(--primary);
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+            animation: fadeInUp 0.4s ease-out;
+        }
+
+        .loot-item {
+            background-color: rgba(0, 212, 255, 0.03);
+            padding: 10px;
+            margin: 8px 0;
+            border-left: 2px solid rgba(0, 212, 255, 0.3);
+            font-size: 0.85em;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-radius: 2px;
+        }
+
+        .loot-name {
+            color: var(--primary);
+            flex: 1;
+        }
+
+        .loot-qty {
+            color: var(--text-muted);
+            margin: 0 10px;
+            min-width: 50px;
+            text-align: right;
+        }
+
+        .loot-value {
+            color: var(--success);
+            font-weight: bold;
+            min-width: 100px;
+            text-align: right;
+        }
+
+        .loss-item {
+            background-color: rgba(255, 51, 51, 0.08);
+            border-left: 3px solid var(--danger);
+            padding: 15px;
+            margin-bottom: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-radius: 2px;
+        }
+
+        .loss-value {
+            color: var(--danger);
+            font-weight: bold;
+            font-size: 1.1em;
+        }
+
+        .pilot-item {
+            background-color: rgba(0, 212, 255, 0.05);
+            border-left: 3px solid var(--primary);
+            padding: 12px;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-radius: 2px;
+        }
+
+        .pilot-name {
+            color: var(--primary);
+            font-weight: bold;
+        }
+
+        .pilot-kills {
+            color: var(--text-muted);
+            font-size: 0.85em;
+            margin: 0 15px;
+        }
+
+        .pilot-share {
+            color: var(--success);
+            font-weight: bold;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .form-row.full {
+            grid-template-columns: 1fr;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .form-group label {
+            color: var(--text-muted);
+            font-size: 0.8em;
+            margin-bottom: 5px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .form-group input,
+        .form-group select {
+            background-color: rgba(10, 14, 39, 0.8);
+            border: 1px solid var(--primary);
+            color: var(--text-light);
+            padding: 10px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            border-radius: 2px;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus {
+            outline: none;
+            box-shadow: 0 0 10px rgba(0, 212, 255, 0.3);
+        }
+
+        .stat-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+
+        .mini-stat {
+            background-color: rgba(0, 212, 255, 0.05);
+            border: 1px solid var(--primary);
+            padding: 12px;
+            border-radius: 2px;
+            text-align: center;
+        }
+
+        .mini-stat-label {
+            color: var(--text-muted);
+            font-size: 0.7em;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 5px;
+        }
+
+        .mini-stat-value {
+            color: var(--primary);
+            font-weight: bold;
+            font-size: 1.2em;
+        }
+
+        .session-item {
+            background-color: rgba(0, 212, 255, 0.05);
+            border: 1px solid var(--primary);
+            padding: 15px;
+            margin-bottom: 12px;
+            border-radius: 2px;
+        }
+
+        .session-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .session-name {
+            color: var(--primary);
+            font-weight: bold;
+        }
+
+        .session-date {
+            color: var(--text-muted);
+            font-size: 0.85em;
+        }
+
+        .session-stats {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 10px;
+            font-size: 0.85em;
+            margin-top: 10px;
+        }
+
+        .session-stat {
+            text-align: center;
+            padding: 8px;
+            background-color: rgba(0, 212, 255, 0.1);
+            border-radius: 2px;
+        }
+
+        .session-label {
+            color: var(--text-muted);
+            font-size: 0.75em;
+        }
+
+        .session-value {
+            color: var(--success);
+            font-weight: bold;
+        }
+
+        .expandable {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .expandable:hover {
+            opacity: 0.8;
+        }
+
+        .expand-icon {
+            display: inline-block;
+            transition: transform 0.3s ease;
+            margin-right: 8px;
+        }
+
+        .expand-icon.open {
+            transform: rotate(90deg);
+        }
+
+        .expanded-content {
+            display: none;
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid rgba(0, 212, 255, 0.2);
+        }
+
+        .expanded-content.open {
+            display: block;
+        }
+
+        .chart-bar {
+            background-color: rgba(0, 212, 255, 0.2);
+            height: 30px;
+            margin-bottom: 12px;
+            border-radius: 2px;
+            display: flex;
+            align-items: center;
+            padding: 0 10px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .chart-bar-inner {
+            background: linear-gradient(90deg, var(--primary), var(--accent));
+            height: 100%;
+            display: flex;
+            align-items: center;
+            padding: 0 10px;
+            color: var(--bg-dark);
+            font-weight: bold;
+            font-size: 0.85em;
+            white-space: nowrap;
+        }
+
+        .chart-label {
+            position: absolute;
+            left: 10px;
+            color: var(--text-light);
+            font-weight: bold;
+            z-index: 2;
+            font-size: 0.85em;
+        }
+
+        @media (max-width: 768px) {
+            .main-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .stats-panel {
+                position: static;
+            }
+
+            h1 {
+                font-size: 1.8em;
+            }
+
+            .kill-item {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 10px;
+            }
+
+            .kill-isk {
+                margin-right: 0;
+                text-align: left;
+            }
+
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+
+            .session-stats {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>⚔ LOOT TRACKER</h1>
+            <p class="subtitle">Gate Camp ISK Calculator</p>
+        </header>
+
+        <div class="main-grid">
+            <div class="panel">
+                <h2>Loot Tracker</h2>
+
+                <div class="tabs">
+                    <button class="tab-btn active" onclick="switchTab('kills')">Kills</button>
+                    <button class="tab-btn" onclick="switchTab('losses')">Losses</button>
+                    <button class="tab-btn" onclick="switchTab('loot')">Loot Breakdown</button>
+                    <button class="tab-btn" onclick="switchTab('pilots')">Pilots</button>
+                    <button class="tab-btn" onclick="switchTab('manual')">Manual Entry</button>
+                    <button class="tab-btn" onclick="switchTab('sessions')">Sessions</button>
+                </div>
+
+                <div id="messageContainer"></div>
+
+                <!-- KILLS TAB -->
+                <div id="kills" class="tab-content active">
+                    <div class="input-group">
+                        <input 
+                            type="text" 
+                            id="killmailInput" 
+                            placeholder="Paste zkillboard link or kill ID"
+                            autocomplete="off"
+                        >
+                        <button onclick="addKill()">Add Kill</button>
+                    </div>
+
+                    <div id="killsList"></div>
+
+                    <div id="emptyState" class="empty-state">
+                        No kills tracked yet.<br>
+                        Paste a killboard link to get started.
+                    </div>
+                </div>
+
+                <!-- LOSSES TAB -->
+                <div id="losses" class="tab-content">
+                    <div class="form-row full">
+                        <div class="form-group">
+                            <label>Ship Lost</label>
+                            <input type="text" id="lossShip" placeholder="e.g., Catalyst">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>ISK Value</label>
+                            <input type="number" id="lossValue" placeholder="0" min="0">
+                        </div>
+                        <div class="form-group">
+                            <label>Pilot</label>
+                            <input type="text" id="lossPilot" placeholder="Your name">
+                        </div>
+                    </div>
+                    <button onclick="addLoss()" style="width: 100%; margin-bottom: 20px;">Add Loss</button>
+
+                    <div id="lossesList"></div>
+                </div>
+
+                <!-- LOOT BREAKDOWN TAB -->
+                <div id="loot" class="tab-content">
+                    <div style="max-height: 600px; overflow-y: auto;">
+                        <div id="lootBreakdown" class="empty-state">
+                            Add kills to see loot breakdown
+                        </div>
+                    </div>
+                </div>
+
+                <!-- PILOTS TAB -->
+                <div id="pilots" class="tab-content">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Pilot Name</label>
+                            <input type="text" id="pilotName" placeholder="Character name">
+                        </div>
+                        <div style="display: flex; gap: 10px; align-items: flex-end;">
+                            <button onclick="addPilot()" style="flex: 1;">Add Pilot</button>
+                            <button class="secondary-btn" onclick="resetPilots()" style="flex: 1; color: var(--danger);">Reset</button>
+                        </div>
+                    </div>
+
+                    <div id="pilotsList"></div>
+                </div>
+
+                <!-- MANUAL ENTRY TAB -->
+                <div id="manual" class="tab-content">
+                    <p style="color: var(--text-muted); font-size: 0.85em; margin-bottom: 15px;">
+                        For kills that API didn't find or manual adds
+                    </p>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Victim Name</label>
+                            <input type="text" id="manualVictim" placeholder="Character name">
+                        </div>
+                        <div class="form-group">
+                            <label>Ship Type</label>
+                            <input type="text" id="manualShip" placeholder="e.g., Rifter">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>ISK Value</label>
+                            <input type="number" id="manualValue" placeholder="0" min="0">
+                        </div>
+                        <div class="form-group">
+                            <label>Location</label>
+                            <input type="text" id="manualLocation" placeholder="Gate name">
+                        </div>
+                    </div>
+                    <button onclick="addManualKill()" style="width: 100%; margin-bottom: 20px;">Add Kill</button>
+                </div>
+
+                <!-- SESSIONS TAB -->
+                <div id="sessions" class="tab-content">
+                    <div class="form-row full">
+                        <div class="form-group">
+                            <label>Session Name</label>
+                            <input type="text" id="sessionName" placeholder="e.g., Gate Camp - Amarr Route">
+                        </div>
+                    </div>
+                    <button onclick="saveSession()" style="width: 100%; margin-bottom: 20px;">Save Current Session</button>
+
+                    <div id="sessionsList"></div>
+                </div>
+
+                <div class="controls">
+                    <button class="secondary-btn" onclick="exportResults()">📊 Export</button>
+                    <button class="secondary-btn" onclick="clearAll()" style="color: var(--danger);">🗑 Clear All</button>
+                </div>
+            </div>
+
+            <div class="panel stats-panel">
+                <h2>Fleet Stats</h2>
+
+                <div class="stat-block">
+                    <div class="stat-label">Total Profit</div>
+                    <div class="stat-value" id="totalISK">0</div>
+                </div>
+
+                <div class="stat-row">
+                    <div class="mini-stat">
+                        <div class="mini-stat-label">Kills</div>
+                        <div class="mini-stat-value" id="killCount">0</div>
+                    </div>
+                    <div class="mini-stat">
+                        <div class="mini-stat-label">Losses</div>
+                        <div class="mini-stat-value" id="lossCount">0</div>
+                    </div>
+                </div>
+
+                <div class="stat-row">
+                    <div class="mini-stat">
+                        <div class="mini-stat-label">Avg Kill</div>
+                        <div class="mini-stat-value" id="avgISK">0</div>
+                    </div>
+                    <div class="mini-stat">
+                        <div class="mini-stat-label">Pilots</div>
+                        <div class="mini-stat-value" id="pilotCount">0</div>
+                    </div>
+                </div>
+
+                <div class="split-calculator">
+                    <div class="stat-label">Split Calculator</div>
+                    <div class="split-input">
+                        <input 
+                            type="number" 
+                            id="fleetSize" 
+                            placeholder="Pilots" 
+                            min="1" 
+                            value="5"
+                            onchange="calculateSplit()"
+                            onkeyup="calculateSplit()"
+                        >
+                        <div style="flex: 1; color: var(--text-muted); font-size: 0.8em; display: flex; align-items: center;">
+                            pilots
+                        </div>
+                    </div>
+                    <div class="split-result" id="splitResult">
+                        Each: 0 ISK
+                    </div>
+                </div>
+
+                <div class="stat-block" style="margin-top: 15px;">
+                    <div class="stat-label">Tax Calculator</div>
+                    <div style="margin-top: 10px;">
+                        <div class="split-input" style="margin-bottom: 8px;">
+                            <input 
+                                type="number" 
+                                id="taxPercent" 
+                                placeholder="%" 
+                                min="0"
+                                max="100"
+                                value="10"
+                                onchange="calculateSplit()"
+                                onkeyup="calculateSplit()"
+                            >
+                            <div style="flex: 1; color: var(--text-muted); font-size: 0.8em; display: flex; align-items: center;">
+                                tax %
+                            </div>
+                        </div>
+                        <div class="split-result" id="taxResult">
+                            Corp: 0 | Fleet: 0
+                        </div>
+                    </div>
+                </div>
+
+                <div class="stat-block" style="margin-top: 15px;">
+                    <div class="stat-label">ISK/Hour</div>
+                    <div style="margin-top: 10px;">
+                        <div class="split-input" style="margin-bottom: 8px;">
+                            <input 
+                                type="number" 
+                                id="durationHours" 
+                                placeholder="Hours" 
+                                min="0.25"
+                                step="0.25"
+                                value="2"
+                                onchange="calculateSplit()"
+                                onkeyup="calculateSplit()"
+                            >
+                            <div style="flex: 1; color: var(--text-muted); font-size: 0.8em; display: flex; align-items: center;">
+                                hours
+                            </div>
+                        </div>
+                        <div class="split-result" id="iskPerHour">
+                            0 ISK/hr
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let kills = [];
+        let losses = [];
+        let pilots = [];
+        let sessions = [];
+
+        function switchTab(tabName) {
+            // Hide all tabs
+            document.querySelectorAll('.tab-content').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+
+            // Show selected tab
+            document.getElementById(tabName).classList.add('active');
+            event.target.classList.add('active');
+
+            // Refresh tab-specific content
+            if (tabName === 'loot') updateLootBreakdown();
+            if (tabName === 'pilots') updatePilotsList();
+            if (tabName === 'sessions') updateSessionsList();
+        }
+
+        // ===== KILLS MANAGEMENT =====
+        function addKill() {
+            const input = document.getElementById('killmailInput');
+            let killID = input.value.trim();
+
+            if (!killID) {
+                showMessage('Please enter a kill ID or zkillboard link', 'error');
+                return;
+            }
+
+            const urlMatch = killID.match(/kill\/(\d+)/);
+            if (urlMatch) {
+                killID = urlMatch[1];
+            }
+
+            if (!/^\d+$/.test(killID)) {
+                showMessage('Invalid kill ID. Use format: 12345678 or full zkillboard link', 'error');
+                return;
+            }
+
+            fetchKillmail(killID);
+            input.value = '';
+            input.focus();
+        }
+
+        function fetchKillmail(killID) {
+            const messageContainer = document.getElementById('messageContainer');
+            messageContainer.innerHTML = '<div class="loading">⟳ Fetching killmail data...</div>';
+
+            fetch(`https://zkillboard.com/api/killID/${killID}/`)
+                .then(response => {
+                    if (!response.ok) throw new Error('Killmail not found');
+                    return response.json();
+                })
+                .then(data => {
+                    if (!data || data.length === 0) {
+                        showMessage('Killmail not found. Try manual entry.', 'error');
+                        messageContainer.innerHTML = '';
+                        return;
+                    }
+
+                    const kill = data[0];
+                    const victim = kill.victim;
+                    const items = kill.items || [];
+
+                    let totalLoot = 0;
+                    let lootItems = [];
+                    
+                    items.forEach(item => {
+                        if (item.flag !== 0) {
+                            const itemValue = item.total_price || 0;
+                            totalLoot += itemValue;
+                            lootItems.push({
+                                name: item.item_name || 'Unknown',
+                                qty: item.qty_destroyed || item.qty_dropped || 1,
+                                value: itemValue
+                            });
+                        }
+                    });
+
+                    const shipValue = victim.ship_value || 0;
+                    const totalValue = totalLoot + shipValue;
+
+                    const killObj = {
+                        id: killID,
+                        timestamp: new Date().toLocaleTimeString(),
+                        date: new Date().toLocaleDateString(),
+                        victim: victim.character_name || 'Unknown',
+                        ship: victim.ship_name || 'Unknown',
+                        value: totalValue,
+                        loot: totalLoot,
+                        items: lootItems,
+                        location: kill.solar_system_name || 'Unknown'
+                    };
+
+                    kills.push(killObj);
+                    updateDisplay();
+                    showMessage(`✓ Kill added: ${killObj.victim} (${killObj.ship})`, 'success');
+                })
+                .catch(error => {
+                    showMessage(`Error fetching killmail: ${error.message}. Try manual entry.`, 'error');
+                    messageContainer.innerHTML = '';
+                });
+        }
+
+        function removeKill(index) {
+            kills.splice(index, 1);
+            updateDisplay();
+        }
+
+        // ===== LOSSES MANAGEMENT =====
+        function addLoss() {
+            const ship = document.getElementById('lossShip').value.trim();
+            const value = parseInt(document.getElementById('lossValue').value) || 0;
+            const pilot = document.getElementById('lossPilot').value.trim() || 'Unknown';
+
+            if (!ship || value === 0) {
+                showMessage('Please enter ship and ISK value', 'error');
+                return;
+            }
+
+            losses.push({
+                ship: ship,
+                value: value,
+                pilot: pilot,
+                timestamp: new Date().toLocaleTimeString(),
+                date: new Date().toLocaleDateString()
+            });
+
+            document.getElementById('lossShip').value = '';
+            document.getElementById('lossValue').value = '';
+            document.getElementById('lossPilot').value = '';
+
+            updateDisplay();
+            updateLossesList();
+            showMessage(`✓ Loss recorded: ${ship}`, 'success');
+        }
+
+        function removeLoss(index) {
+            losses.splice(index, 1);
+            updateDisplay();
+            updateLossesList();
+        }
+
+        function updateLossesList() {
+            const list = document.getElementById('lossesList');
+            if (losses.length === 0) {
+                list.innerHTML = '<div class="empty-state">No losses recorded</div>';
+                return;
+            }
+
+            list.innerHTML = losses.map((loss, index) => `
+                <div class="loss-item">
+                    <div>
+                        <div style="color: var(--primary); font-weight: bold;">${loss.ship}</div>
+                        <div style="color: var(--text-muted); font-size: 0.85em;">${loss.pilot} • ${loss.timestamp}</div>
+                    </div>
+                    <div style="display: flex; gap: 15px; align-items: center;">
+                        <div class="loss-value">${formatISK(loss.value)}</div>
+                        <button class="remove-btn" onclick="removeLoss(${index})">Remove</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // ===== LOOT BREAKDOWN =====
+        function updateLootBreakdown() {
+            const container = document.getElementById('lootBreakdown');
+            
+            if (kills.length === 0) {
+                container.innerHTML = '<div class="empty-state">Add kills to see loot breakdown</div>';
+                return;
+            }
+
+            let allItems = {};
+            
+            kills.forEach(kill => {
+                kill.items.forEach(item => {
+                    if (!allItems[item.name]) {
+                        allItems[item.name] = { qty: 0, value: 0 };
+                    }
+                    allItems[item.name].qty += item.qty;
+                    allItems[item.name].value += item.value;
+                });
+            });
+
+            const sorted = Object.entries(allItems)
+                .sort((a, b) => b[1].value - a[1].value)
+                .slice(0, 50);
+
+            const maxValue = Math.max(...sorted.map(i => i[1].value));
+
+            let html = '';
+            sorted.forEach(([name, data]) => {
+                const percentage = (data.value / maxValue) * 100;
+                html += `
+                    <div class="chart-bar">
+                        <div class="chart-label">${name}</div>
+                        <div class="chart-bar-inner" style="width: ${percentage}%;">
+                            ${formatISK(data.value)}
+                        </div>
+                    </div>
+                `;
+            });
+
+            container.innerHTML = html;
+        }
+
+        // ===== PILOT MANAGEMENT =====
+        function addPilot() {
+            const name = document.getElementById('pilotName').value.trim();
+            if (!name) {
+                showMessage('Enter pilot name', 'error');
+                return;
+            }
+
+            if (!pilots.find(p => p.name === name)) {
+                pilots.push({ name: name, kills: 0 });
+                document.getElementById('pilotName').value = '';
+                updatePilotsList();
+                showMessage(`✓ ${name} added to fleet`, 'success');
+            } else {
+                showMessage('Pilot already in fleet', 'error');
+            }
+        }
+
+        function removePilot(index) {
+            pilots.splice(index, 1);
+            updatePilotsList();
+        }
+
+        function resetPilots() {
+            if (confirm('Reset all pilot contributions?')) {
+                pilots.forEach(p => p.kills = 0);
+                updatePilotsList();
+            }
+        }
+
+        function updatePilotsList() {
+            const list = document.getElementById('pilotsList');
+            const totalProfit = getTotalProfit();
+            
+            if (pilots.length === 0) {
+                list.innerHTML = '<div class="empty-state">Add pilots to track fleet composition</div>';
+                document.getElementById('pilotCount').textContent = '0';
+                return;
+            }
+
+            document.getElementById('pilotCount').textContent = pilots.length;
+
+            const perPilot = Math.floor(totalProfit / pilots.length);
+
+            list.innerHTML = pilots.map((pilot, index) => `
+                <div class="pilot-item">
+                    <div class="pilot-name">${pilot.name}</div>
+                    <div class="pilot-kills">${pilot.kills} kills</div>
+                    <div class="pilot-share">${formatISK(perPilot)}</div>
+                    <button class="remove-btn" onclick="removePilot(${index})">Remove</button>
+                </div>
+            `).join('');
+        }
+
+        // ===== MANUAL ENTRY =====
+        function addManualKill() {
+            const victim = document.getElementById('manualVictim').value.trim();
+            const ship = document.getElementById('manualShip').value.trim();
+            const value = parseInt(document.getElementById('manualValue').value) || 0;
+            const location = document.getElementById('manualLocation').value.trim() || 'Unknown';
+
+            if (!victim || !ship || value === 0) {
+                showMessage('Fill in all fields', 'error');
+                return;
+            }
+
+            kills.push({
+                id: 'manual-' + Date.now(),
+                timestamp: new Date().toLocaleTimeString(),
+                date: new Date().toLocaleDateString(),
+                victim: victim,
+                ship: ship,
+                value: value,
+                loot: value,
+                items: [],
+                location: location
+            });
+
+            document.getElementById('manualVictim').value = '';
+            document.getElementById('manualShip').value = '';
+            document.getElementById('manualValue').value = '';
+            document.getElementById('manualLocation').value = '';
+
+            updateDisplay();
+            showMessage(`✓ Manual kill added`, 'success');
+        }
+
+        // ===== SESSIONS =====
+        function saveSession() {
+            const name = document.getElementById('sessionName').value.trim();
+            if (!name) {
+                showMessage('Enter session name', 'error');
+                return;
+            }
+
+            const session = {
+                name: name,
+                date: new Date().toLocaleDateString(),
+                time: new Date().toLocaleTimeString(),
+                kills: kills.length,
+                losses: losses.length,
+                totalISK: getTotalProfit(),
+                pilots: pilots.length
+            };
+
+            sessions.push(session);
+            document.getElementById('sessionName').value = '';
+            updateSessionsList();
+            showMessage(`✓ Session saved: ${name}`, 'success');
+        }
+
+        function removeSession(index) {
+            sessions.splice(index, 1);
+            updateSessionsList();
+        }
+
+        function updateSessionsList() {
+            const list = document.getElementById('sessionsList');
+            
+            if (sessions.length === 0) {
+                list.innerHTML = '<div class="empty-state">No saved sessions</div>';
+                return;
+            }
+
+            list.innerHTML = sessions.map((session, index) => `
+                <div class="session-item">
+                    <div class="session-header">
+                        <div class="session-name">${session.name}</div>
+                        <button class="remove-btn" onclick="removeSession(${index})">Delete</button>
+                    </div>
+                    <div class="session-date">${session.date} ${session.time}</div>
+                    <div class="session-stats">
+                        <div class="session-stat">
+                            <div class="session-label">Kills</div>
+                            <div class="session-value">${session.kills}</div>
+                        </div>
+                        <div class="session-stat">
+                            <div class="session-label">Losses</div>
+                            <div class="session-value">${session.losses}</div>
+                        </div>
+                        <div class="session-stat">
+                            <div class="session-label">Total ISK</div>
+                            <div class="session-value">${formatISK(session.totalISK)}</div>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // ===== CALCULATIONS =====
+        function getTotalProfit() {
+            const killValue = kills.reduce((sum, k) => sum + k.value, 0);
+            const lossValue = losses.reduce((sum, l) => sum + l.value, 0);
+            return killValue - lossValue;
+        }
+
+        function updateDisplay() {
+            const killsList = document.getElementById('killsList');
+            const emptyState = document.getElementById('emptyState');
+            const messageContainer = document.getElementById('messageContainer');
+
+            messageContainer.innerHTML = '';
+
+            if (kills.length === 0) {
+                killsList.innerHTML = '';
+                emptyState.style.display = 'block';
+            } else {
+                emptyState.style.display = 'none';
+                killsList.innerHTML = kills.map((kill, index) => `
+                    <div class="kill-item">
+                        <div class="kill-info">
+                            <div class="kill-name">${kill.victim}</div>
+                            <div class="kill-details">${kill.ship} • ${kill.location} • ${kill.timestamp}</div>
+                        </div>
+                        <div class="kill-isk ${kill.value > 100000000 ? 'high' : ''}">
+                            ${formatISK(kill.value)}
+                        </div>
+                        <button class="remove-btn" onclick="removeKill(${index})">Remove</button>
+                    </div>
+                `).join('');
+            }
+
+            // Update stats
+            const totalProfit = getTotalProfit();
+            const killCount = kills.length;
+            const lossCount = losses.length;
+            const avg = killCount > 0 ? Math.floor(kills.reduce((sum, k) => sum + k.value, 0) / killCount) : 0;
+
+            document.getElementById('totalISK').textContent = formatISK(totalProfit);
+            document.getElementById('killCount').textContent = killCount;
+            document.getElementById('lossCount').textContent = lossCount;
+            document.getElementById('avgISK').textContent = formatISK(avg);
+
+            updateLossesList();
+            calculateSplit();
+        }
+
+        function calculateSplit() {
+            const totalProfit = getTotalProfit();
+            const fleetSize = parseInt(document.getElementById('fleetSize').value) || 1;
+            const taxPercent = parseInt(document.getElementById('taxPercent').value) || 10;
+            const hours = parseFloat(document.getElementById('durationHours').value) || 1;
+
+            const perPilot = Math.floor(totalProfit / fleetSize);
+            const afterTax = Math.floor(totalProfit * (1 - taxPercent / 100));
+            const corpTax = totalProfit - afterTax;
+            const perPilotAfterTax = Math.floor(afterTax / fleetSize);
+            const iskPerHour = Math.floor(totalProfit / hours);
+
+            document.getElementById('splitResult').textContent = 
+                `Each: ${formatISK(perPilotAfterTax)} ISK`;
+            
+            document.getElementById('taxResult').textContent = 
+                `Corp: ${formatISK(corpTax)} | Fleet: ${formatISK(afterTax)}`;
+            
+            document.getElementById('iskPerHour').textContent = 
+                `${formatISK(iskPerHour)} ISK/hr`;
+        }
+
+        function formatISK(isk) {
+            if (isk >= 1000000000) {
+                return (isk / 1000000000).toFixed(2) + ' B';
+            } else if (isk >= 1000000) {
+                return (isk / 1000000).toFixed(2) + ' M';
+            } else if (isk >= 1000) {
+                return (isk / 1000).toFixed(2) + ' K';
+            }
+            return isk.toString();
+        }
+
+        function showMessage(text, type) {
+            const container = document.getElementById('messageContainer');
+            const className = type === 'error' ? 'error' : 'success-msg';
+            container.innerHTML = `<div class="${className}">${text}</div>`;
+            setTimeout(() => {
+                if (container.firstChild && container.firstChild.classList.contains(className)) {
+                    container.innerHTML = '';
+                }
+            }, 4000);
+        }
+
+        function clearAll() {
+            if (confirm('Clear ALL data? This cannot be undone.')) {
+                kills = [];
+                losses = [];
+                pilots = [];
+                updateDisplay();
+                showMessage('✓ All data cleared', 'success');
+            }
+        }
+
+        function exportResults() {
+            if (kills.length === 0) {
+                showMessage('No data to export', 'error');
+                return;
+            }
+
+            const totalProfit = getTotalProfit();
+            const fleetSize = parseInt(document.getElementById('fleetSize').value) || 1;
+            const taxPercent = parseInt(document.getElementById('taxPercent').value) || 10;
+            const perPilot = Math.floor(totalProfit * (1 - taxPercent / 100) / fleetSize);
+
+            let text = 'EVE LOOT TRACKER - Gate Camp Report\n';
+            text += '====================================\n\n';
+            
+            text += 'KILLS\n';
+            text += '-----\n';
+            kills.forEach((k, i) => {
+                text += `${i + 1}. ${k.victim} (${k.ship}) @ ${k.location}\n`;
+                text += `   Value: ${formatISK(k.value)} ISK | ${k.timestamp}\n`;
+            });
+
+            if (losses.length > 0) {
+                text += '\nLOSSES\n';
+                text += '------\n';
+                losses.forEach((l, i) => {
+                    text += `${i + 1}. ${l.ship} (${l.pilot}) - ${formatISK(l.value)} ISK\n`;
+                });
+            }
+
+            if (pilots.length > 0) {
+                text += '\nFLEET\n';
+                text += '-----\n';
+                pilots.forEach(p => {
+                    text += `- ${p.name}\n`;
+                });
+            }
+
+            text += '\nSUMMARY\n';
+            text += '-------\n';
+            text += `Total Kills: ${kills.length}\n`;
+            text += `Total Losses: ${losses.length}\n`;
+            text += `Gross ISK: ${formatISK(kills.reduce((s, k) => s + k.value, 0))}\n`;
+            text += `Loss ISK: ${formatISK(losses.reduce((s, l) => s + l.value, 0))}\n`;
+            text += `Net Profit: ${formatISK(totalProfit)}\n`;
+            text += `Tax (${taxPercent}%): ${formatISK(totalProfit - Math.floor(totalProfit * (1 - taxPercent / 100)))}\n`;
+            text += `Fleet Size: ${fleetSize} pilots\n`;
+            text += `Per Pilot: ${formatISK(perPilot)} ISK\n`;
+
+            const blob = new Blob([text], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `loot-report-${new Date().getTime()}.txt`;
+            a.click();
+            URL.revokeObjectURL(url);
+
+            showMessage('✓ Results exported', 'success');
+        }
+
+        document.getElementById('killmailInput').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') addKill();
+        });
+
+        updateDisplay();
+    </script>
+</body>
+</html>
